@@ -14,6 +14,8 @@ import sys
 IN_COLAB = 'google.colab' in sys.modules
 IN_AZUREML = 'azureml' in sys.modules
 
+print('hello from automerge')
+
 # %%
 # DID YOU SET covid_ftp_pw?
 import os
