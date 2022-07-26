@@ -8,6 +8,7 @@
 
 # %%
 import time
+
 t0 = time.perf_counter()
 
 import sys
