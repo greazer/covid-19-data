@@ -12,10 +12,12 @@ t0 = time.perf_counter()
 
 import sys
 IN_COLAB = 'google.colab' in sys.modules
+IN_AZUREML = 'azureml' in sys.modules
 
+# %%
 # DID YOU SET covid_ftp_pw?
-# import os
-# os.environ['covid_ftp_pw']
+import os
+os.environ['covid_ftp_pw'] = ''
 
 # %%
 if IN_COLAB:
@@ -29,15 +31,13 @@ if (os.name == 'nt'):
     basefolder = os.getcwd() + '\\'
 elif IN_COLAB:
     basefolder = os.getcwd() + '/drive/MyDrive/Colab Notebooks/covid-19-data-1/SampleNbsAndScripts/'
+elif IN_AZUREML:
+    basefolder = os.getcwd() + '/../'
 else: 
     basefolder = os.getcwd() + '/'
 
 print('basefolder = ' + basefolder)
 #display(HTML(F'<H1>Hello from <span style="color:{color};">' + str.upper(os.name) + '</span>!!!!</H1>'))
-
-# %%
-if (os.name != 'nt'):
-    !pip install sodapy
 
 # %%
 import pandas as pd
@@ -287,7 +287,7 @@ covid_by_age.drop(indexNames , inplace=True)
 
 # %%
 
-df = covid_by_age[(covid_by_age.state == 'United States') & (covid_by_age.sex == 'All Sexes')]
+df = covid_by_age[(covid_by_age.state == 'United States') & (covid_by_age.sex == 'All Sexes') & (covid_by_age.group == 'By Total')]
 df = df.assign(PopulationRaw=int(0))
 df.loc[df.age_group=='All Ages', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE == 999)])
 df.loc[df.age_group=='Under 1 year', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE == 0)])
@@ -295,12 +295,11 @@ df.loc[df.age_group=='0-17 years', 'PopulationRaw'] = int(population_by_age.POPE
 df.loc[df.age_group=='1-4 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 1) & (population_by_age.AGE <= 4)].sum())
 df.loc[df.age_group=='5-14 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 5) & (population_by_age.AGE <= 14)].sum())
 df.loc[df.age_group=='15-24 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 15) & (population_by_age.AGE <= 24)].sum())
-#df.loc[df.age_group=='18-29 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 18) & (population_by_age.AGE <= 29)].sum())
 df.loc[df.age_group=='25-34 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 25) & (population_by_age.AGE <= 34)].sum())
-#df.loc[df.age_group=='30-49 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 30) & (population_by_age.AGE <= 49)].sum())
+df.loc[df.age_group=='30-39 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 30) & (population_by_age.AGE <= 39)].sum())
 df.loc[df.age_group=='35-44 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 35) & (population_by_age.AGE <= 44)].sum())
+df.loc[df.age_group=='40-49 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 40) & (population_by_age.AGE <= 49)].sum())
 df.loc[df.age_group=='45-54 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 45) & (population_by_age.AGE <= 54)].sum())
-#df.loc[df.age_group=='50-64 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 50) & (population_by_age.AGE <= 64)].sum())
 df.loc[df.age_group=='55-64 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 55) & (population_by_age.AGE <= 64)].sum())
 df.loc[df.age_group=='65-74 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 65) & (population_by_age.AGE <= 74)].sum())
 df.loc[df.age_group=='75-84 years', 'PopulationRaw'] = int(population_by_age.POPESTIMATE2019[(population_by_age.SEX == 0) & (population_by_age.AGE >= 75) & (population_by_age.AGE <= 84)].sum())
@@ -309,10 +308,10 @@ df.loc[df.age_group=='85 years and over', 'PopulationRaw'] = int(population_by_a
 df = df.assign(Population=df.PopulationRaw.map(lambda n: '{:,}'.format(n)))
 df = df.assign(ChanceOfDeathByCOVIDRaw = (df.covid_19_deaths.astype(int) / df.PopulationRaw))
 df = df.assign(ChanceOfDeathByPneumoniaRaw = (df.pneumonia_deaths.astype(int) / df.PopulationRaw))
-df = df.assign(ChanceOfDeathByPneumonia = df['ChanceOfDeathByPneumoniaRaw'].map(lambda n: 'none' if n==0 else 1/n))
-df = df.assign(ChanceOfDeathByCOVID = df['ChanceOfDeathByCOVIDRaw'].map(lambda n: 'none' if n==0 else 1/n))
+df = df.assign(ChanceOfDeathByPneumonia = df['ChanceOfDeathByPneumoniaRaw'].map(lambda n: 'none' if n==0 else '1 in {:,}'.format(round(1/n))))
+df = df.assign(ChanceOfDeathByCOVID = df['ChanceOfDeathByCOVIDRaw'].map(lambda n: 'none' if n==0 else '1 in {:,}'.format(round(1/n))))
 df = df.assign(ChanceOfDeathByFluRaw = (df.influenza_deaths.astype(int) / df.PopulationRaw))
-df = df.assign(ChanceOfDeathByFlu = df['ChanceOfDeathByFluRaw'].map(lambda n: 'none' if n==0 else 1/n))
+df = df.assign(ChanceOfDeathByFlu = df['ChanceOfDeathByFluRaw'].map(lambda n: 'none' if n==0 else '1 in {:,}'.format(round(1/n))))
 df = df.assign(ChanceOfDeathOtherThanCOVIDRaw = (df.total_deaths.astype(int) - (df.covid_19_deaths.astype(int) + df.pneumonia_deaths.astype(int) + df.influenza_deaths.astype(int))) / df.PopulationRaw)
 df = df.assign(ChanceOfDeathOtherThanCOVID = df['ChanceOfDeathOtherThanCOVIDRaw'].map(lambda n: '1 in {:,}'.format(round(1/n))))
 df = df.assign(ChanceOfLivingAfterCOVIDRaw = 1 - df['ChanceOfDeathByCOVIDRaw'])
@@ -344,11 +343,6 @@ html_graphs.write('''
 ''')
 html_graphs.write("  <object data=\""+'DeathRiskTable.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
-# %% [markdown]
-#  **********************************************************************************************************
-#  # New cases per day for US
-#  **********************************************************************************************************
-
 # %%
 def movingaverage(df, window):
     if len(df) > window:
@@ -370,6 +364,7 @@ def generate_delta_df(state, county, column):
     totals_by_date['diff'] = 0
     if deltas.size > 0:
         totals_by_date['diff'][1:] = deltas
+        totals_by_date.loc[totals_by_date['diff'] < 0] = 0
     return totals_by_date
 
 def plotmovingaverage(deltas_df, nameOfplot, hover_template, show_by_default=True):
@@ -387,10 +382,11 @@ def plotmovingaverage(deltas_df, nameOfplot, hover_template, show_by_default=Tru
         )
 
 
+# %% [markdown]
+# **********************************************************************************************************
+# # New Cases and Deaths in US
+# **********************************************************************************************************
 # %%
-#############################
-# New cases and Deaths in US
-#############################
 row = 1
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 total_new_cases_by_date = generate_delta_df("all", "", "cases")
@@ -437,10 +433,11 @@ implies that if you are infected, you have a 97% chance of surviving. <br/>
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
 
+# %% [markdown]
+# **********************************************************************************************************
+# # New cases by state
+# **********************************************************************************************************
 # %%
-#############################
-# New cases by state
-#############################
 row += 1
 layout = go.Layout(
         title = 'New cases by state',
@@ -468,10 +465,11 @@ html_graphs.write('''
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
 
+# %% [markdown]
+# **********************************************************************************************************
+# # Daily Deaths by state
+# **********************************************************************************************************
 # %%
-#############################
-# Daily Deaths by state
-#############################
 row += 1
 layout = go.Layout(
         title = 'Daily deaths by state',
@@ -496,10 +494,11 @@ plotly.offline.plot(fig, filename=webpage_folder + 'Chart_'+str(row)+'.html',aut
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
 
+# %% [markdown]
+# **********************************************************************************************************
+# # New cases by interesting county
+# **********************************************************************************************************
 # %%
-#############################
-# New cases by interesting county
-#############################
 row += 1
 layout = go.Layout(
         title = 'New cases by interesting county',
@@ -526,10 +525,11 @@ html_graphs.write('''
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
 
+# %% [markdown]
+# **********************************************************************************************************
+# # Daily deaths by interesting county
+# **********************************************************************************************************
 # %%
-#############################
-# Daily deaths by interesting county
-#############################
 row += 1
 layout = go.Layout(
         title = 'Daily deaths by interesting county',
@@ -554,17 +554,18 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 html_graphs.write("\n</div>\n")
 
 # %%
-if IN_COLAB: 
-  !pip install plotly==4.7.1 
+if IN_COLAB or IN_AZUREML: 
+  #%pip install plotly==4.7.1 I don't think we need to downgrade plotly. 
   !wget https://github.com/plotly/orca/releases/download/v1.2.1/orca-1.2.1-x86_64.AppImage -O /usr/local/bin/orca 
   !chmod +x /usr/local/bin/orca 
   !apt-get install xvfb libgtk2.0-0 libgconf-2-4
-  import plotly.graph_objects as go
+  #import plotly.graph_objects as go
 
+# %% [markdown]
+# **********************************************************************************************************
+# # Do all states & counties
+# **********************************************************************************************************
 # %%
-#####################################
-# Do all states & counties
-#####################################
 html_graphs.write('''
 <div>
 <h1>State New Cases and Death Breakdowns</h1>\n
@@ -678,7 +679,6 @@ html_graphs.write('<div style=\"clear:both\"></div>')
 #  **********************************************************************************************************
 #  # State Totals
 #  **********************************************************************************************************
-
 # %%
 def plottotalcases(state, county = 'all', show_by_default=True):
     if county == 'all':
@@ -731,9 +731,11 @@ as new cases on a daily basis.
 </div>''')
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
-###########################
-# County Totals
-###########################
+# %% [markdown]
+# **********************************************************************************************************
+# # County Totals
+# **********************************************************************************************************
+# %%
 row += 1
 starting_cases = 200
 layout = go.Layout(
@@ -759,7 +761,6 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 #  **********************************************************************************************************
 #  # State cases adjusted for population
 #  **********************************************************************************************************
-
 # %%
 def stateplotpercapita(state, show_by_default):
     data = state_cov_data[state_cov_data.state == state][['date', 'cases']].groupby('date').sum()
@@ -808,11 +809,10 @@ population state.
 </div>''')
 html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + str(default_width * 1.10) + " height=" + str(default_height* 1.10) + "\"></object>"+"\n")
 
-#################################################
-# County cases adjusted for population
-#################################################
-
-
+# %% [markdown]
+# **********************************************************************************************************
+# # County cases adjusted for population
+# **********************************************************************************************************
 # %%
 def countyplotpercapita(state, county, show_by_default):
     data = county_cov_data[county_cov_data.state == state][['date', 'cases', 'county']].groupby('date').sum()
@@ -855,7 +855,6 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 #  **********************************************************************************************************
 #  # State cases adjusted for population density
 #  **********************************************************************************************************
-
 # %%
 def stateplotbydensity(state, show_by_default):
     data = state_cov_data[state_cov_data.state == state][['date', 'cases']].groupby('date').sum()
@@ -909,7 +908,6 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 #  **********************************************************************************************************
 #  # County cases adjusted for population density
 #  **********************************************************************************************************
-
 # %%
 def countyplotbydensity(county, state, show_by_default):
     data = county_cov_data[(county_cov_data.county == county) & (county_cov_data.state == state)][['date', 'cases']].groupby('date').sum()
@@ -977,7 +975,6 @@ html_graphs.write('<div style=\"clear:both\"></div>')
 #  **********************************************************************************************************
 #  # City cases adjusted for population
 #  **********************************************************************************************************
-
 # %%
 def cityplotpercapita(state, city, show_by_default):
     county = 'not found'
@@ -1035,7 +1032,6 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 #  **********************************************************************************************************
 #  # City total cases adjusted for population density
 #  **********************************************************************************************************
-
 # %%
 def cityplotbydensity(state, city, show_by_default):
     county = 'not found'
@@ -1093,7 +1089,6 @@ html_graphs.write("  <object data=\""+'Chart_'+str(row)+'.html'+"\" width=" + st
 #  **********************************************************************************************************
 #  # City deaths adjusted for population density
 #  **********************************************************************************************************
-
 # %%
 def citydeathsplotbydensity(state, city, show_by_default):
     county = 'not found'
