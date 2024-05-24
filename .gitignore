@@ -7,3 +7,5 @@ SampleNbsAndScripts/webpage
 .tmp.drivedownload
 .vscode
 .idea
+.venv
+.env
